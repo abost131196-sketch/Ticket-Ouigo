@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ticket à gratter</title>
+
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: #f5e7b2;
+    font-family: Arial, sans-serif;
+  }
+
+  .ticket {
+    width: min(92vw, 500px);
+    padding: 12px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #8f6410, #ffd95c, #b98212, #ffe58a);
+    box-shadow: 0 15px 35px rgba(0,0,0,.25);
+  }
+
+  .ticket-inner {
+    position: relative;
+    overflow: hidden;
+    min-height: 330px;
+    border-radius: 15px;
+    background: #fffaf0;
+    border: 3px solid #b88620;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 35px 25px;
+  }
+
+  .title {
+    position: absolute;
+    top: 18px;
+    font-size: 24px;
+    font-weight: 900;
+    color: #9a6b10;
+  }
+
+  .message {
+    font-size: clamp(22px, 6vw, 32px);
+    line-height: 1.3;
+    font-weight: 900;
+    color: #9a6b10;
+  }
+
+  .scratch-area {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .scratch-area:active {
+    cursor: grabbing;
+  }
+
+  .reset {
+    margin-top: 15px;
+    border: none;
+    border-radius: 20px;
+    padding: 9px 18px;
+    background: #9a6b10;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<div>
+  <div class="ticket">
+    <div class="ticket-inner" id="ticket">
+
+      <div class="title">🎟️ TICKET À GRATTER</div>
+
+      <div class="message">
+        BRAVO tu as gagné 10€ de réduction grâce à mon code promo APP10 de gros rat 🐀💸
+      </div>
+
+      <canvas id="scratchCanvas" class="scratch-area"></canvas>
+
+    </div>
+  </div>
+
+  <div style="text-align:center;">
+    <button class="reset" id="reset">Recommencer</button>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("scratchCanvas");
+const ticket = document.getElementById("ticket");
+const reset = document.getElementById("reset");
+const ctx = canvas.getContext("2d");
+
+let drawing = false;
+
+function setup() {
+  const rect = ticket.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = rect.width + "px";
+  canvas.style.height = rect.height + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Couche dorée à gratter
+  const gradient = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+  gradient.addColorStop(0, "#fff0a0");
+  gradient.addColorStop(.25, "#c38b18");
+  gradient.addColorStop(.5, "#ffe275");
+  gradient.addColorStop(.75, "#a96f0b");
+  gradient.addColorStop(1, "#f6d568");
+
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+
+  // Texte uniquement sur la partie dorée
+  ctx.fillStyle = "#694600";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "900 32px Arial";
+  ctx.fillText("GRATTE ICI", rect.width / 2, rect.height / 2);
+
+  // Petit effet brillant
+  ctx.globalAlpha = 0.2;
+  for (let i = 0; i < 700; i++) {
+    const x = Math.random() * rect.width;
+    const y = Math.random() * rect.height;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(x, y, 1.5, 1.5);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function scratch(x, y) {
+  const rect = canvas.getBoundingClientRect();
+
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(
+    x - rect.left,
+    y - rect.top,
+    27,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill();
+}
+
+canvas.addEventListener("pointerdown", e => {
+  drawing = true;
+  scratch(e.clientX, e.clientY);
+});
+
+canvas.addEventListener("pointermove", e => {
+  if (!drawing) return;
+  scratch(e.clientX, e.clientY);
+});
+
+window.addEventListener("pointerup", () => {
+  drawing = false;
+});
+
+reset.addEventListener("click", setup);
+window.addEventListener("resize", setup);
+
+setup();
+</script>
+
+</body>
+</html>
